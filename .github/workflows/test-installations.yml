@@ -22,7 +22,9 @@ jobs:
     
     - name: Test uvhow detection
       run: |
-        python3 -m pip install -e .
+        python3 -m venv test_env
+        source test_env/bin/activate
+        pip install -e .
         python3 -m uvhow
         # Verify it detects standalone installer
         python3 -m uvhow | grep -q "Standalone installer" || (echo "❌ Failed to detect standalone installer" && exit 1)
@@ -42,7 +44,9 @@ jobs:
     
     - name: Test uvhow detection
       run: |
-        python3 -m pip install -e .
+        python3 -m venv test_env
+        source test_env/bin/activate
+        pip install -e .
         python3 -m uvhow
         # Verify it detects pip user installation
         python3 -m uvhow | grep -q "pip (user)" || (echo "❌ Failed to detect pip user installation" && exit 1)
@@ -86,7 +90,9 @@ jobs:
     
     - name: Test uvhow detection
       run: |
-        python3 -m pip install -e .
+        python3 -m venv test_env
+        source test_env/bin/activate
+        pip install -e .
         python3 -m uvhow
         # Verify it detects pipx installation
         python3 -m uvhow | grep -q "pipx" || (echo "❌ Failed to detect pipx installation" && exit 1)
@@ -103,7 +109,9 @@ jobs:
     
     - name: Test uvhow detection
       run: |
-        python3 -m pip install -e .
+        python3 -m venv test_env
+        source test_env/bin/activate
+        pip install -e .
         python3 -m uvhow
         # Verify it detects Homebrew installation
         python3 -m uvhow | grep -q "Homebrew" || (echo "❌ Failed to detect Homebrew installation" && exit 1)
@@ -125,7 +133,9 @@ jobs:
     
     - name: Test uvhow detection
       run: |
-        python3 -m pip install -e .
+        python3 -m venv test_env
+        source test_env/bin/activate
+        pip install -e .
         python3 -m uvhow
         # Verify it detects Cargo installation
         python3 -m uvhow | grep -q "Cargo" || (echo "❌ Failed to detect Cargo installation" && exit 1)
@@ -151,7 +161,9 @@ jobs:
     
     - name: Test uvhow detection
       run: |
-        pip3 install -e .
+        python3 -m venv test_env
+        source test_env/bin/activate
+        pip install -e .
         python3 -m uvhow
         # Verify it detects system pip installation
         python3 -m uvhow | grep -q "pip (system)" || python3 -m uvhow | grep -q "Unknown"
@@ -163,8 +175,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install test dependencies
-      run: python3 -m pip install -e .
-    
-    - name: Run comprehensive detection tests
-      run: python3 test_detection.py
+    - name: Install test dependencies and run tests
+      run: |
+        python3 -m venv test_env
+        source test_env/bin/activate
+        pip install -e .
+        python3 test_detection.py
