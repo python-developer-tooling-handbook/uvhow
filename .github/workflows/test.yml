@@ -1,0 +1,180 @@
+name: Test UV Installation Detection
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        exclude:
+          # Reduce matrix size for faster CI
+          - os: windows-latest
+            python-version: "3.9"
+          - os: windows-latest
+            python-version: "3.10"
+          - os: macos-latest
+            python-version: "3.9"
+          - os: macos-latest
+            python-version: "3.10"
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+
+    - name: Set up Python with uv
+      run: uv python install ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        uv venv
+        uv pip install pytest pytest-mock
+
+    - name: Install package in development mode
+      run: uv pip install -e .
+
+    - name: Run unit tests
+      run: uv run pytest test_windows_support.py -v
+
+    - name: Test uvhow CLI directly
+      run: |
+        uv run uvhow
+        uv run python -m uvhow
+
+    - name: Test with different uv installation methods (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        # Test current installation
+        echo "=== Current uv installation ==="
+        uv run uvhow
+
+        # Test if we can detect the current method
+        echo "=== Testing detection ==="
+        which uv
+        uv --version
+
+    - name: Test with different uv installation methods (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        # Test current installation
+        echo "=== Current uv installation ==="
+        uv run uvhow
+
+        # Test if we can detect the current method
+        echo "=== Testing detection ==="
+        where uv
+        uv --version
+
+  test-installation-methods:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        method: [pip, standalone]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install uvhow
+      run: pip install -e .
+
+    - name: Test pip installation method
+      if: matrix.method == 'pip'
+      run: |
+        # Install uv via pip to test detection
+        pip install uv
+        python -m uvhow
+
+    - name: Test standalone installation method
+      if: matrix.method == 'standalone'
+      run: |
+        # Install uv via standalone installer
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+          echo "$env:USERPROFILE\\.local\\bin" >> $GITHUB_PATH
+        else
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        fi
+      shell: bash
+
+    - name: Test detection after standalone install
+      if: matrix.method == 'standalone'
+      run: |
+        # Reload PATH and test
+        python -m uvhow
+      shell: bash
+
+  test-package-managers:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            package-manager: cargo
+          - os: macos-latest
+            package-manager: homebrew
+          - os: windows-latest
+            package-manager: scoop
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install uvhow
+      run: pip install -e .
+
+    - name: Install via Cargo
+      if: matrix.package-manager == 'cargo'
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source ~/.cargo/env
+        cargo install --git https://github.com/astral-sh/uv uv
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install via Homebrew
+      if: matrix.package-manager == 'homebrew'
+      run: |
+        brew install uv
+
+    - name: Install via Scoop
+      if: matrix.package-manager == 'scoop'
+      run: |
+        # Install Scoop
+        Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+        irm get.scoop.sh | iex
+        scoop bucket add main
+        scoop install uv
+      shell: powershell
+
+    - name: Test detection
+      run: python -m uvhow
+      shell: bash
