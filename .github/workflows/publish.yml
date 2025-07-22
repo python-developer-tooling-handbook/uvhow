@@ -4,12 +4,21 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_run:
+    workflows: ["Test UV Installation Detection"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     environment: release
+    # Only run if tests passed (when triggered by workflow_run) or when manually triggered/tagged
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      github.event_name == 'push' || 
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     permissions:
       id-token: write  # Required for trusted publishing
     
