@@ -51,7 +51,7 @@ jobs:
       run: uv pip install -e .
 
     - name: Run unit tests
-      run: uv run pytest test_windows_support.py -v
+      run: uv run pytest test_detection.py -v
 
     - name: Test uvhow CLI directly
       run: |
