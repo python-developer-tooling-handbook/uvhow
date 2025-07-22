@@ -1,3 +1,5 @@
+import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -27,34 +29,32 @@ def get_uv_version() -> Optional[str]:
 
 def is_uv_installed_via_pip() -> bool:
     """Check if uv is installed via pip by checking pip list."""
-    try:
-        # Try python -m pip first (most reliable)
-        result = subprocess.run(
-            ["python", "-m", "pip", "show", "uv"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return "Name: uv" in result.stdout
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    # Try multiple pip commands in order of preference
+    pip_commands = [
+        [sys.executable, "-m", "pip", "show", "uv"],  # Use current Python interpreter
+        ["python", "-m", "pip", "show", "uv"],        # Standard python
+        ["python3", "-m", "pip", "show", "uv"],       # python3 (Unix-like systems)
+        ["pip", "show", "uv"],                        # Direct pip call
+    ]
+
+    # On Windows, also try py launcher
+    if platform.system() == "Windows":
+        pip_commands.insert(1, ["py", "-m", "pip", "show", "uv"])
+
+    for cmd in pip_commands:
         try:
-            # Fallback to python3 -m pip
             result = subprocess.run(
-                ["python3", "-m", "pip", "show", "uv"],
+                cmd,
                 capture_output=True,
                 text=True,
                 check=True,
             )
-            return "Name: uv" in result.stdout
+            if "Name: uv" in result.stdout:
+                return True
         except (subprocess.CalledProcessError, FileNotFoundError):
-            try:
-                # Final fallback to pip directly
-                result = subprocess.run(
-                    ["pip", "show", "uv"], capture_output=True, text=True, check=True
-                )
-                return "Name: uv" in result.stdout
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                return False
+            continue
+
+    return False
 
 
 def detect_uv_installation() -> Optional[UvInstallation]:
@@ -73,78 +73,103 @@ def detect_uv_installation() -> Optional[UvInstallation]:
     # Detect installation method based on path patterns
     # Use original path for pattern matching to avoid filesystem resolution issues
     path_str = uv_path_str
+    is_windows = platform.system() == "Windows"
 
-    # Check .local/bin/uv locations (could be standalone installer or user pip)
-    if "/.local/bin/uv" in path_str and (
-        path_str.startswith("/Users/") or path_str.startswith("/home/")
-    ):
-        if is_pip_installed:
+    if is_windows:
+        # Windows-specific detection
+        path_str_lower = path_str.lower()
+
+        # Windows Store Python (check first to avoid conflicts)
+        if "\\microsoft\\windowsapps\\" in path_str_lower:
+            return UvInstallation(
+                path=uv_path,
+                version=version,
+                method="pip (Windows Store Python)",
+                upgrade_command="pip install --upgrade uv",
+            )
+
+        # Standalone installer
+        if "\\appdata\\local\\programs\\uv\\" in path_str_lower:
+            return UvInstallation(
+                path=uv_path,
+                version=version,
+                method="Standalone installer",
+                upgrade_command="uv self update",
+            )
+
+        # Cargo on Windows
+        if "\\.cargo\\bin\\" in path_str_lower:
+            return UvInstallation(
+                path=uv_path,
+                version=version,
+                method="Cargo",
+                upgrade_command="cargo install --git https://github.com/astral-sh/uv uv --force",
+            )
+
+        # Scoop
+        if "\\scoop\\apps\\uv\\" in path_str_lower or "\\scoop\\shims\\" in path_str_lower:
+            return UvInstallation(
+                path=uv_path,
+                version=version,
+                method="Scoop",
+                upgrade_command="scoop update uv",
+            )
+
+        # Chocolatey
+        if "\\chocolatey\\bin\\" in path_str_lower or "\\programdata\\chocolatey\\" in path_str_lower:
+            return UvInstallation(
+                path=uv_path,
+                version=version,
+                method="Chocolatey",
+                upgrade_command="choco upgrade uv",
+            )
+
+        # pipx on Windows
+        if "\\pipx\\venvs\\uv\\" in path_str_lower:
+            return UvInstallation(
+                path=uv_path,
+                version=version,
+                method="pipx",
+                upgrade_command="pipx upgrade uv",
+            )
+
+        # Virtual environment pip on Windows
+        if any(
+            venv in path_str_lower for venv in ["\\venv\\scripts\\", "\\env\\scripts\\", "\\.venv\\scripts\\", "\\.env\\scripts\\"]
+        ):
+            return UvInstallation(
+                path=uv_path,
+                version=version,
+                method="pip (virtual environment)",
+                upgrade_command="pip install --upgrade uv",
+            )
+
+        # System Python on Windows (check for broader patterns)
+        if any(pattern in path_str_lower for pattern in ["\\python39\\scripts\\", "\\python3\\scripts\\", "\\python\\scripts\\"]) and not "\\users\\" in path_str_lower:
+            if is_pip_installed:
+                return UvInstallation(
+                    path=uv_path,
+                    version=version,
+                    method="pip (system)",
+                    upgrade_command="pip install --upgrade uv",
+                )
+
+        # User Python installations (fallback for AppData and user paths)
+        if ("\\appdata\\roaming\\python\\scripts\\" in path_str_lower or "\\users\\" in path_str_lower) and is_pip_installed:
             return UvInstallation(
                 path=uv_path,
                 version=version,
                 method="pip (user)",
                 upgrade_command="pip install --upgrade --user uv",
             )
-        return UvInstallation(
-            path=uv_path,
-            version=version,
-            method="Standalone installer",
-            upgrade_command="uv self update",
-        )
 
-    # Cargo
-    if "/.cargo/bin/uv" in path_str:
-        return UvInstallation(
-            path=uv_path,
-            version=version,
-            method="Cargo",
-            upgrade_command="cargo install --git https://github.com/astral-sh/uv uv --force",
-        )
+    else:
+        # Unix-like systems (Linux, macOS, etc.)
 
-    # Homebrew
-    if "/opt/homebrew/" in path_str or (
-        "/usr/local/" in path_str and "Cellar" in path_str
-    ):
-        return UvInstallation(
-            path=uv_path,
-            version=version,
-            method="Homebrew",
-            upgrade_command="brew upgrade uv",
-        )
-
-    # pipx
-    if "/pipx/venvs/uv/" in path_str:
-        return UvInstallation(
-            path=uv_path,
-            version=version,
-            method="pipx",
-            upgrade_command="pipx upgrade uv",
-        )
-
-    # Virtual environment pip
-    if any(
-        venv in path_str for venv in ["/venv/bin/uv", "/env/bin/uv", "/.venv/bin/uv", "/.env/bin/uv"]
-    ):
-        return UvInstallation(
-            path=uv_path,
-            version=version,
-            method="pip (virtual environment)",
-            upgrade_command="pip install --upgrade uv",
-        )
-
-    # System or user pip (fallback for other /bin/uv paths)
-    if path_str.endswith("/bin/uv"):
-        if "/usr/local/bin/uv" in path_str or "/usr/bin/uv" in path_str:
-            # System-wide locations
-            if is_pip_installed:
-                return UvInstallation(
-                    path=uv_path,
-                    version=version,
-                    method="pip (system)",
-                    upgrade_command="sudo pip install --upgrade uv",
-                )
-        else:
-            # Other locations - check if pip-installed
+        # Check .local/bin/uv locations (could be standalone installer or user pip)
+        if "/.local/bin/uv" in path_str and (
+            path_str.startswith("/Users/") or path_str.startswith("/home/")
+        ):
             if is_pip_installed:
                 return UvInstallation(
                     path=uv_path,
@@ -152,6 +177,73 @@ def detect_uv_installation() -> Optional[UvInstallation]:
                     method="pip (user)",
                     upgrade_command="pip install --upgrade --user uv",
                 )
+            return UvInstallation(
+                path=uv_path,
+                version=version,
+                method="Standalone installer",
+                upgrade_command="uv self update",
+            )
+
+        # Cargo
+        if "/.cargo/bin/uv" in path_str:
+            return UvInstallation(
+                path=uv_path,
+                version=version,
+                method="Cargo",
+                upgrade_command="cargo install --git https://github.com/astral-sh/uv uv --force",
+            )
+
+        # Homebrew
+        if "/opt/homebrew/" in path_str or (
+            "/usr/local/" in path_str and "Cellar" in path_str
+        ):
+            return UvInstallation(
+                path=uv_path,
+                version=version,
+                method="Homebrew",
+                upgrade_command="brew upgrade uv",
+            )
+
+        # pipx
+        if "/pipx/venvs/uv/" in path_str:
+            return UvInstallation(
+                path=uv_path,
+                version=version,
+                method="pipx",
+                upgrade_command="pipx upgrade uv",
+            )
+
+        # Virtual environment pip
+        if any(
+            venv in path_str for venv in ["/venv/bin/uv", "/env/bin/uv", "/.venv/bin/uv", "/.env/bin/uv"]
+        ):
+            return UvInstallation(
+                path=uv_path,
+                version=version,
+                method="pip (virtual environment)",
+                upgrade_command="pip install --upgrade uv",
+            )
+
+        # System or user pip (fallback for other /bin/uv paths)
+        if path_str.endswith("/bin/uv"):
+            if "/usr/local/bin/uv" in path_str or "/usr/bin/uv" in path_str:
+                # System-wide locations
+                if is_pip_installed:
+                    return UvInstallation(
+                        path=uv_path,
+                        version=version,
+                        method="pip (system)",
+                        upgrade_command="sudo pip install --upgrade uv",
+                    )
+            else:
+                # Other locations - check if pip-installed
+                if is_pip_installed:
+                    return UvInstallation(
+                        path=uv_path,
+                        version=version,
+                        method="pip (user)",
+                        upgrade_command="pip install --upgrade --user uv",
+                    )
 
     # Unknown method
     return UvInstallation(

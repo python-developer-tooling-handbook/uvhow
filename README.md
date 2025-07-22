@@ -2,6 +2,8 @@
 
 Detect how [uv](https://github.com/astral-sh/uv) was installed and get upgrade instructions.
 
+Works on **Windows**, **macOS**, and **Linux** with support for all major installation methods.
+
 ## Usage
 
 Run with uvx (recommended):
@@ -29,6 +31,7 @@ uvhow
 
 ## Supported Installation Methods
 
+### Unix/Linux/macOS
 - **Standalone installer** (`~/.local/bin/uv`) -> `uv self update`
 - **Cargo** (`~/.cargo/bin/uv`) -> `cargo install --git https://github.com/astral-sh/uv uv --force`
 - **Homebrew** (`/opt/homebrew/bin/uv`) -> `brew upgrade uv`
@@ -36,6 +39,17 @@ uvhow
 - **pip (virtual environment)** -> `pip install --upgrade uv`
 - **pip (system)** -> `sudo pip install --upgrade uv`
 - **pip (user)** -> `pip install --upgrade --user uv`
+
+### Windows
+- **Standalone installer** (`%USERPROFILE%\AppData\Local\Programs\uv\uv.exe`) -> `uv self update`
+- **Cargo** (`%USERPROFILE%\.cargo\bin\uv.exe`) -> `cargo install --git https://github.com/astral-sh/uv uv --force`
+- **Scoop** (`%USERPROFILE%\scoop\apps\uv\current\uv.exe`) -> `scoop update uv`
+- **Chocolatey** (`C:\ProgramData\chocolatey\bin\uv.exe`) -> `choco upgrade uv`
+- **pipx** (`%USERPROFILE%\pipx\venvs\uv\Scripts\uv.exe`) -> `pipx upgrade uv`
+- **pip (virtual environment)** -> `pip install --upgrade uv`
+- **pip (system)** -> `pip install --upgrade uv`
+- **pip (user)** -> `pip install --upgrade --user uv`
+- **pip (Windows Store Python)** -> `pip install --upgrade uv`
 
 ## Programmatic Usage
 
