@@ -288,7 +288,10 @@ def main() -> None:
     installation = detect_uv_installation()
 
     if installation is None:
-        print("❌ uv is not installed or not in PATH")
+        try:
+            print("❌ uv is not installed or not in PATH")
+        except UnicodeEncodeError:
+            print("uv is not installed or not in PATH")
         print("Install uv: curl -LsSf https://astral.sh/uv/install.sh | sh")
         sys.exit(1)
 
