@@ -256,17 +256,31 @@ def detect_uv_installation() -> Optional[UvInstallation]:
 
 def print_installation_info(installation: UvInstallation) -> None:
     """Print formatted installation information."""
-    print("🔍 uv installation detected")
-    print()
-    print(f"✅ Found uv: {installation.version}")
-    print(f"📍 Location: {installation.path}")
-    print()
-    print(f"🎯 Installation method: {installation.method}")
-    print(f"💡 To upgrade: {installation.upgrade_command}")
+    try:
+        print("🔍 uv installation detected")
+        print()
+        print(f"✅ Found uv: {installation.version}")
+        print(f"📍 Location: {installation.path}")
+        print()
+        print(f"🎯 Installation method: {installation.method}")
+        print(f"💡 To upgrade: {installation.upgrade_command}")
 
-    if installation.method == "Unknown":
-        print(f"📍 Path: {installation.path}")
-        print("💡 Try: uv self update or reinstall with the standalone installer")
+        if installation.method == "Unknown":
+            print(f"📍 Path: {installation.path}")
+            print("💡 Try: uv self update or reinstall with the standalone installer")
+    except UnicodeEncodeError:
+        # Fallback for Windows terminals that can't display emojis
+        print("uv installation detected")
+        print()
+        print(f"Found uv: {installation.version}")
+        print(f"Location: {installation.path}")
+        print()
+        print(f"Installation method: {installation.method}")
+        print(f"To upgrade: {installation.upgrade_command}")
+
+        if installation.method == "Unknown":
+            print(f"Path: {installation.path}")
+            print("Try: uv self update or reinstall with the standalone installer")
 
 
 def main() -> None:
