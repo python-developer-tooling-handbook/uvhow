@@ -44,9 +44,8 @@ jobs:
     
     - name: Test uvhow detection
       run: |
-        python3 -m venv test_env
-        source test_env/bin/activate
-        pip install -e .
+        # Install uvhow in user space where uv is installed
+        python3 -m pip install --user -e .
         python3 -m uvhow
         # Verify it detects pip user installation
         python3 -m uvhow | grep -q "pip (user)" || (echo "❌ Failed to detect pip user installation" && exit 1)
@@ -149,7 +148,7 @@ jobs:
     - name: Install system dependencies
       run: |
         apt-get update
-        apt-get install -y python3 python3-pip git curl
+        apt-get install -y python3 python3-pip python3-venv git curl
     
     - uses: actions/checkout@v4
     
@@ -161,9 +160,8 @@ jobs:
     
     - name: Test uvhow detection
       run: |
-        python3 -m venv test_env
-        source test_env/bin/activate
-        pip install -e .
+        # Install uvhow in the same environment where uv is installed
+        pip3 install -e .
         python3 -m uvhow
         # Verify it detects system pip installation
         python3 -m uvhow | grep -q "pip (system)" || python3 -m uvhow | grep -q "Unknown"
