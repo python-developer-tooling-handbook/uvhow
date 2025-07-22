@@ -47,3 +47,33 @@ if installation:
     print(f"Method: {installation.method}")
     print(f"Upgrade: {installation.upgrade_command}")
 ```
+
+## Development
+
+### Releasing New Versions
+
+Use the included version bump script to release new versions:
+
+```bash
+# Preview what will happen
+python bump_version.py patch --dry-run
+
+# Bump patch version (0.1.2 -> 0.1.3) and deploy
+python bump_version.py patch
+
+# Bump minor version (0.1.2 -> 0.2.0) and deploy  
+python bump_version.py minor
+
+# Bump major version (0.1.2 -> 1.0.0) and deploy
+python bump_version.py major
+```
+
+The script will:
+1. Update the version in `pyproject.toml`
+2. Commit the version change
+3. Create a git tag (e.g., `v0.1.3`)
+4. Push the tag to trigger GitHub Actions deployment to PyPI
+
+**Requirements:**
+- Clean git working directory (no uncommitted changes)
+- Push access to the repository
