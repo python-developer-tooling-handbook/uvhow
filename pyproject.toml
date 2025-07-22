@@ -1,6 +1,6 @@
 [project]
 name = "uvhow"
-version = "0.4.1"
+version = "0.4.3"
 description = "Detect how uv was installed and get upgrade instructions"
 readme = "README.md"
 authors = [
