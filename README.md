@@ -73,14 +73,6 @@ pip install pre-commit
 pre-commit install
 ```
 
-This will automatically:
-- Remove trailing whitespace
-- Fix end-of-file issues
-- Format Python code with Black
-- Sort imports with isort
-- Validate YAML/TOML syntax
-- Check for merge conflicts
-
 ### Releasing New Versions
 
 Use the included version bump script to release new versions:
