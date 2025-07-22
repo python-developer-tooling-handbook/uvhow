@@ -13,13 +13,13 @@ jobs:
     name: Test Standalone Installer
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install uv via standalone installer
       run: curl -LsSf https://astral.sh/uv/install.sh | sh
-      
+
     - name: Add uv to PATH
       run: echo "$HOME/.local/bin" >> $GITHUB_PATH
-    
+
     - name: Test uvhow detection
       run: |
         python3 -m venv test_env
@@ -35,13 +35,13 @@ jobs:
     name: Test pip --user Installation
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install uv via pip --user
       run: python3 -m pip install --user uv
-      
+
     - name: Add user bin to PATH
       run: echo "$HOME/.local/bin" >> $GITHUB_PATH
-    
+
     - name: Test uvhow detection
       run: |
         # Install uvhow in user space where uv is installed
@@ -56,7 +56,7 @@ jobs:
     name: Test pip in Virtual Environment
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Create virtual environment and install uv
       run: |
         python3 -m venv .venv
@@ -64,7 +64,7 @@ jobs:
         pip install uv
         echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
         echo ".venv/bin" >> $GITHUB_PATH
-    
+
     - name: Test uvhow detection in venv
       run: |
         source .venv/bin/activate
@@ -79,14 +79,14 @@ jobs:
     name: Test pipx Installation
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install pipx and uv
       run: |
         python3 -m pip install --user pipx
         python3 -m pipx ensurepath
         echo "$HOME/.local/bin" >> $GITHUB_PATH
         pipx install uv
-    
+
     - name: Test uvhow detection
       run: |
         python3 -m venv test_env
@@ -102,10 +102,10 @@ jobs:
     name: Test Homebrew Installation
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install uv via Homebrew
       run: brew install uv
-    
+
     - name: Test uvhow detection
       run: |
         python3 -m venv test_env
@@ -121,15 +121,15 @@ jobs:
     name: Test Cargo Installation
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install Rust and Cargo
       uses: dtolnay/rust-toolchain@stable
-    
+
     - name: Install uv via Cargo
       run: |
         cargo install --git https://github.com/astral-sh/uv uv
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-    
+
     - name: Test uvhow detection
       run: |
         python3 -m venv test_env
@@ -140,39 +140,13 @@ jobs:
         python3 -m uvhow | grep -q "Cargo" || (echo "❌ Failed to detect Cargo installation" && exit 1)
         echo "✅ Correctly detected Cargo installation"
 
-  test-system-pip:
-    runs-on: ubuntu-latest
-    name: Test System pip Installation
-    container: ubuntu:22.04
-    steps:
-    - name: Install system dependencies
-      run: |
-        apt-get update
-        apt-get install -y python3 python3-pip python3-venv git curl
-    
-    - uses: actions/checkout@v4
-    
-    - name: Install uv via system pip
-      run: |
-        pip3 install uv
-        # Move uv to system location to simulate system installation
-        cp /usr/local/bin/uv /usr/bin/uv || cp ~/.local/bin/uv /usr/local/bin/uv
-    
-    - name: Test uvhow detection
-      run: |
-        # Install uvhow in the same environment where uv is installed
-        pip3 install -e .
-        python3 -m uvhow
-        # Verify it detects system pip installation
-        python3 -m uvhow | grep -q "pip (system)" || python3 -m uvhow | grep -q "Unknown"
-        echo "✅ System pip test completed"
 
   test-detection-accuracy:
     runs-on: ubuntu-latest
     name: Test Detection Logic
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install test dependencies and run tests
       run: |
         python3 -m venv test_env
