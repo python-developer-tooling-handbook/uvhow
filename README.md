@@ -50,6 +50,23 @@ if installation:
 
 ## Development
 
+### Setup
+
+Install pre-commit hooks for code quality:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+This will automatically:
+- Remove trailing whitespace
+- Fix end-of-file issues
+- Format Python code with Black
+- Sort imports with isort
+- Validate YAML/TOML syntax
+- Check for merge conflicts
+
 ### Releasing New Versions
 
 Use the included version bump script to release new versions:
@@ -61,7 +78,7 @@ python bump_version.py patch --dry-run
 # Bump patch version (0.1.2 -> 0.1.3) and deploy
 python bump_version.py patch
 
-# Bump minor version (0.1.2 -> 0.2.0) and deploy  
+# Bump minor version (0.1.2 -> 0.2.0) and deploy
 python bump_version.py minor
 
 # Bump major version (0.1.2 -> 1.0.0) and deploy

@@ -1,0 +1,38 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+        description: Trims trailing whitespace
+        entry: trailing-whitespace-fixer
+        language: python
+        types: [text]
+
+      - id: end-of-file-fixer
+        name: Fix end of files
+        description: Ensures that a file is either empty or ends with one newline
+        entry: end-of-file-fixer
+        language: python
+        types: [text]
+
+      - id: check-yaml
+        name: Check YAML
+        description: Attempts to load all yaml files to verify syntax
+        entry: check-yaml
+        language: python
+        types: [yaml]
+
+      - id: check-toml
+        name: Check TOML
+        description: Attempts to load all TOML files to verify syntax
+        entry: check-toml
+        language: python
+        types: [toml]
+
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+        description: Check for files that contain merge conflict strings
+        entry: check-merge-conflict
+        language: python
+        types: [text]
