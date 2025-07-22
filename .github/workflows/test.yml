@@ -134,8 +134,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            package-manager: cargo
           - os: macos-latest
             package-manager: homebrew
           - os: windows-latest
@@ -151,14 +149,6 @@ jobs:
 
     - name: Install uvhow
       run: pip install -e .
-
-    - name: Install via Cargo
-      if: matrix.package-manager == 'cargo'
-      run: |
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-        source ~/.cargo/env
-        cargo install --git https://github.com/astral-sh/uv uv
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
     - name: Install via Homebrew
       if: matrix.package-manager == 'homebrew'
