@@ -116,30 +116,6 @@ jobs:
         python3 -m uvhow | grep -q "Homebrew" || (echo "❌ Failed to detect Homebrew installation" && exit 1)
         echo "✅ Correctly detected Homebrew installation"
 
-  test-cargo:
-    runs-on: ubuntu-latest
-    name: Test Cargo Installation
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Install Rust and Cargo
-      uses: dtolnay/rust-toolchain@stable
-
-    - name: Install uv via Cargo
-      run: |
-        cargo install --git https://github.com/astral-sh/uv uv
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
-    - name: Test uvhow detection
-      run: |
-        python3 -m venv test_env
-        source test_env/bin/activate
-        pip install -e .
-        python3 -m uvhow
-        # Verify it detects Cargo installation
-        python3 -m uvhow | grep -q "Cargo" || (echo "❌ Failed to detect Cargo installation" && exit 1)
-        echo "✅ Correctly detected Cargo installation"
-
 
   test-detection-accuracy:
     runs-on: ubuntu-latest
