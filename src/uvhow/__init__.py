@@ -167,9 +167,7 @@ def detect_uv_installation() -> Optional[UvInstallation]:
         # Unix-like systems (Linux, macOS, etc.)
 
         # Check .local/bin/uv locations (could be standalone installer or user pip)
-        if "/.local/bin/uv" in path_str and (
-            path_str.startswith("/Users/") or path_str.startswith("/home/")
-        ):
+        if "/.local/bin/uv" in path_str:
             if is_pip_installed:
                 return UvInstallation(
                     path=uv_path,
@@ -195,7 +193,7 @@ def detect_uv_installation() -> Optional[UvInstallation]:
 
         # Homebrew
         if "/opt/homebrew/" in path_str or (
-            "/usr/local/" in path_str and "Cellar" in path_str
+            "/usr/local/" in path_str and ("Cellar" in path_str or "cellar" in path_str)
         ):
             return UvInstallation(
                 path=uv_path,
