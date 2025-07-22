@@ -123,7 +123,7 @@ def detect_uv_installation() -> Optional[UvInstallation]:
 
     # Virtual environment pip
     if any(
-        venv in path_str for venv in ["/venv/bin/uv", "/env/bin/uv", "/.venv/bin/uv"]
+        venv in path_str for venv in ["/venv/bin/uv", "/env/bin/uv", "/.venv/bin/uv", "/.env/bin/uv"]
     ):
         return UvInstallation(
             path=uv_path,
