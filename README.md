@@ -6,16 +6,12 @@ Works on **Windows**, **macOS**, and **Linux** with support for all major instal
 
 ## Usage
 
-Run with uvx (recommended):
+Run with [uvx](https://docs.astral.sh/uv/guides/tools/):
+
 ```bash
 uvx uvhow
 ```
 
-Or install and run:
-```bash
-uv add uvhow
-uvhow
-```
 
 ## Example Output
 
